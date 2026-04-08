@@ -1,0 +1,155 @@
+environment:
+  name: codefixrl
+  version: "1.0.0"
+  description: >
+    CodeFixRL – An OpenEnv-compatible reinforcement learning environment
+    for evaluating an AI agent's ability to detect bugs, reason about
+    logical errors, and refactor inefficient Python code.
+  author: CodeFixRL Authors
+  license: MIT
+
+tasks:
+  - id: easy
+    name: syntax_error_detection
+    difficulty: easy
+    description: >
+      The agent must identify the line number containing a Python syntax
+      error and suggest the corrected line of code.
+    max_steps: 3
+    reward_range: [-1.0, 1.0]
+    actions:
+      - locate_error
+      - suggest_fix
+
+  - id: medium
+    name: logical_bug_detection
+    difficulty: medium
+    description: >
+      The agent must analyse a Python function, identify the logical bug
+      (wrong operator, bad initialisation, off-by-one, etc.) and propose
+      the corrected implementation.
+    max_steps: 4
+    reward_range: [-1.0, 1.0]
+    actions:
+      - analyze_function
+      - identify_bug
+      - propose_fix
+
+  - id: hard
+    name: code_optimization_refactoring
+    difficulty: hard
+    description: >
+      The agent must detect a performance inefficiency (e.g. O(n²) loop,
+      string concatenation abuse, exponential recursion), refactor the
+      code to improve efficiency, and explain the improvement.
+    max_steps: 5
+    reward_range: [-1.0, 1.0]
+    actions:
+      - detect_inefficiency
+      - refactor_code
+      - explain_improvement
+
+observation_schema:
+  type: object
+  description: The structured observation returned by the environment at each step.
+  properties:
+    code:
+      type: string
+      description: Python code snippet the agent must analyse.
+    description:
+      type: string
+      description: Natural-language description of the task objective.
+    difficulty:
+      type: string
+      enum: [easy, medium, hard]
+    expected_output:
+      type: string
+      nullable: true
+      description: What the corrected code should produce.
+    constraints:
+      type: array
+      items:
+        type: string
+      description: Constraints the fix or refactor must satisfy.
+    step:
+      type: integer
+      description: Current step number within the episode (0-indexed).
+    max_steps:
+      type: integer
+      description: Maximum allowed steps per episode.
+    task_id:
+      type: string
+      description: Unique identifier for the current scenario.
+    task_name:
+      type: string
+      description: Human-readable task name.
+
+action_schema:
+  type: object
+  description: Structured action submitted by the agent.
+  properties:
+    action_type:
+      type: string
+      enum:
+        - locate_error
+        - suggest_fix
+        - analyze_function
+        - identify_bug
+        - propose_fix
+        - detect_inefficiency
+        - refactor_code
+        - explain_improvement
+    line_number:
+      type: integer
+      nullable: true
+      description: 1-indexed line number (used with locate_error).
+    replacement_code:
+      type: string
+      nullable: true
+      description: Corrected or refactored code block.
+    description:
+      type: string
+      nullable: true
+      description: Natural-language description of the bug or inefficiency.
+    explanation:
+      type: string
+      nullable: true
+      description: Explanation of the improvement (explain_improvement).
+  required:
+    - action_type
+
+reward_schema:
+  type: object
+  properties:
+    reward:
+      type: number
+      description: Immediate reward for the last action. Range [-1.0, 1.0].
+    cumulative_reward:
+      type: number
+      description: Total accumulated reward for the episode.
+    done:
+      type: boolean
+      description: Whether the episode has ended.
+    info:
+      type: object
+      description: Additional diagnostic information.
+
+difficulty_levels:
+  easy:
+    description: Syntax error detection. Requires identifying a single faulty line.
+    scenarios: 5
+    ideal_steps: 2
+  medium:
+    description: Logical bug detection. Requires reasoning about incorrect behaviour.
+    scenarios: 5
+    ideal_steps: 2
+  hard:
+    description: Code optimization and refactoring. Multi-step with explanation required.
+    scenarios: 5
+    ideal_steps: 3
+
+compute:
+  vcpu: 2
+  ram_gb: 8
+  framework: python
+  python_version: "3.11"
