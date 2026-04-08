@@ -26,7 +26,11 @@ import sys
 import traceback
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
 from openai import OpenAI
+
+# Load environment variables from .env file
+load_dotenv()
 
 # ---------------------------------------------------------------------------
 # Local imports – must run from the codefixrl/ root directory
